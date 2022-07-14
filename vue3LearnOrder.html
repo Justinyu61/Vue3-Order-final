@@ -14,13 +14,12 @@
             <div class="container gx-2">
                 <div class="row gx-3 bg-light py-3">
                     <div class="col-md-4">
-                        <!--        加入prevent避免原生html改變資料-->
-                        <div class="list-group"
-                             v-for="(item, i) in products" :key="i"
-                             @click.prevent="selectProduct(item)"
-                             :class="{ 'active': itemSelected.i === item.i }"
-                        >
-                            <a href="#" class="list-group-item list-group-item-action">
+                        <!--        加入prevent避免原生html<a>改變資料-->
+                        <div class="list-group">
+                            <a href="#" class="list-group-item list-group-item-action"
+                               v-for="(item, key) in products" :key="'products' + key"
+                               @click.prevent="selectProduct(item)"
+                               :class="{ 'active': itemSelected.name === item.name }">
                                 <h6 class="card-title mb-1">{{ item.name }}</h6>
                                 <div class="d-flex align-items-center justify-content-between">
                                     <p class="mb-0"><small>{{ item.engName }}</small></p>
@@ -36,47 +35,48 @@
                             <div class="card-body px-4">
                                 <div class="mb-3">
                                     <label for="productNum" class="form-label">數量</label>
-                                    <input type="number" class="form-control" id="productNum" placeholder="數量" min="0" v-model="itemSelected.count">
+                                    <input type="number" class="form-control" id="productNum" placeholder="數量" min="1" v-model="itemSelected.count">
                                 </div>
                                 <div class="mb-3">
                                     <label for="productNum" class="form-label d-block">冰塊*</label>
+                                    <!--key值建議使用 item.name-->
                                     <div class="form-check form-check-inline"
-                                         v-for="(iceItem, i) in iceType" :key="'ice' + i">
+                                         v-for="(iceItem, key) in iceType" :key="'ice' + key">
                                         <!--hasOwnProperty()方法可以用來檢測一個對象是否有自有屬性,而不是原型鏈繼承的,如果該屬性是有自有屬性的那就會返回true否則返回false-->
                                         <!--                當沒有自帶屬性或 item的defaults.ice不為空且item的defaults.ice不等於預設值時正常顯示 (要確認筆記)-->
                                         <input class="form-check-input" name="iceType" type="radio"
-                                               :id="'ice' + i"
+                                               :id="'ice' + key"
                                                :value="iceItem"
                                                v-model="itemSelected.iceType"
                                                :disabled="!itemSelected.hasOwnProperty('defaults') ||　(itemSelected.defaults.ice !== '' && itemSelected.defaults.ice !== iceItem)"
                                         >
-                                        <label class="form-check-label" :for="'ice' + i">{{ iceItem}}</label>
+                                        <label class="form-check-label" :for="'ice' + key">{{ iceItem}}</label>
                                     </div>
                                 </div>
                                 <div class="mb-3">
                                     <label for="productNum" class="form-label d-block" >甜度*</label>
                                     <div class="form-check form-check-inline"
-                                         v-for="(sugarItem, i) in sugarType" :key="'sugar' + i">
+                                         v-for="(sugarItem, key) in sugarType" :key="'sugar' + key">
                                         <input class="form-check-input" name="sugarType" type="radio"
-                                               :id="'sugar' + i"
+                                               :id="'sugar' + key"
                                                :value="sugarItem"
                                                v-model="itemSelected.sugarType"
                                                :disabled="!itemSelected.hasOwnProperty('defaults') ||　(itemSelected.defaults.sugar !== '' && itemSelected.defaults.sugar !== sugarItem)"
                                         >
-                                        <label class="form-check-label" :for="'sugar' + i">{{ sugarItem }}</label>
+                                        <label class="form-check-label" :for="'sugar' + key">{{ sugarItem }}</label>
                                     </div>
                                 </div>
                                 <div class="mb-3">
                                     <label for="productNum" class="form-label d-block">加料</label>
                                     <div class="form-check form-check-inline"
-                                         v-for="(toppingItem, i) in toppingsType" :key="'topping' + i">
+                                         v-for="(toppingItem, key) in toppingsType" :key="'topping' + key">
                                         <input class="form-check-input" type="checkbox"
-                                               :id="'topping' + i"
+                                               :id="'topping' + key"
                                                :value="toppingItem"
                                                v-model="itemSelected.toppingType"
                                                :disabled="!itemSelected.hasOwnProperty('defaults') ||　itemSelected.defaults.toppings.includes(toppingItem)"
                                         >
-                                        <label class="form-check-label" :for="'topping' + i">{{ toppingItem }}</label>
+                                        <label class="form-check-label" :for="'topping' + key">{{ toppingItem }}</label>
                                     </div>
                                 </div>
                                 <div class="mb-3">
@@ -89,7 +89,8 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="card">
+                        <!--        order區-->
+                        <div class="card" v-if="isShowOrder">
                             <div class="card-body">
                                 <table class="table">
                                     <thead>
@@ -104,7 +105,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr v-for="(orderItem, i) in orderList" :key="'order' + i">
+                                        <tr v-for="(orderItem, key) in orderList" :key="'order' + key">
                                             <th scope="row">{{ orderItem.name }}<br>
                                                 <small class="text-muted fw-normal" v-if="orderItem.notice !== ''">備註：{{ orderItem.notice }}</small>
                                             </th>
@@ -125,7 +126,8 @@
                     </div>
                 </div>
             </div>
-            <div class="bg-light p-3 mt-3" v-if="finalOrdersItem.ordersITem !== ''">
+            <!--  訂單區-->
+            <div class="bg-light p-3 mt-3" v-if="finalOrdersItem.ordersITem !== '' && isShowFinalOrder">
                 <div class="bg-white p-3 d-flex flex-column" style="min-height: 450px;" >
                     <table class="table">
                         <thead>
@@ -140,7 +142,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="( finalItem, i ) in finalOrdersItem.ordersITem " :key="'finalOrders' + i">
+                            <tr v-for="( finalItem, key ) in finalOrdersItem.ordersITem " :key="'finalOrders' + key">
                                 <th scope="row">{{ finalItem.name }}<br>
                                     <small class="text-muted fw-normal" v-if="finalItem.notice !== ''">備註：{{ finalItem.notice }}</small>
                                 </th>
@@ -158,8 +160,11 @@
                     <p class="mb-1" v-if="!finalOrdersItem.notPay">付款狀態：已付款</p>
                     <p class="mb-1" v-else="finalOrdersItem.notPay">付款狀態：未付款</p>
                     <p class="text-end mt-auto">共 NT$ {{ finalOrdersItem.total }} 元</p>
-                    <button type="button" class="btn btn-danger" @click="handleClick" :disabled="finalOrdersItem.ordersITem.length === 0">訂單送出</button>
-                    <!--     多個未付款判斷: finalOrdersItem.ordersITem.length === 0 || !finalOrdersItem.notPay-->
+                    <div class="flex-wrap w-100">
+                        <button type="button" class="btn btn-sm btn-secondary w-auto m-1" @click="deleteOrder" :disabled="finalOrdersItem.ordersITem.length === 0">訂單送出</button>
+                        <!--     多個未付款判斷: finalOrdersItem.ordersITem.length === 0 || !finalOrdersItem.notPay-->
+                        <button class="btn btn-sm btn-danger w-auto m-1" @click="deleteOrder">重新選擇</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -289,8 +294,10 @@
                             date: '',
                             totalPrice: 0,
                             ordersITem:[],
-                            notPay: true
-                        }
+                            notPay: true,
+                        },
+                        isShowOrder: false,
+                        isShowFinalOrder: false
                     }
                 },
                 methods: {
@@ -324,6 +331,7 @@
                         this.orderList.push(order)
                         this.countTotalPrice()
                         this.resetItem()
+                        this.isShowOrder = true
                     },
                     finalOrder(o, t){
                         //訂單物件
@@ -337,14 +345,14 @@
                         this.finalOrdersItem.total = t
                         this.orderList = []
                         this.resetItem()
+                        this.countTotalPrice()
+                        this.isShowOrder = false
+                        this.isShowFinalOrder = true
                     },
-                    handleClick(){
-                        this.finalOrdersItem = {
-                            date: '',
-                            totalPrice: 0,
-                            ordersITem:[],
-                            notPay: true
-                        }
+                    deleteOrder(){
+                        this.orderList = []
+                        this.isShowOrder = false
+                        this.isShowFinalOrder = false
                     }
                 }
             };
